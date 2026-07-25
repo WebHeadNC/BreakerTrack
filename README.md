@@ -65,10 +65,6 @@ the volume too (that *does* lose your data).
 
 To update after pulling code changes: `docker compose up -d --build` again.
 
-This is also the answer if you want one artifact that runs on both Windows and
-Linux: the same image runs unchanged on any machine with Docker installed, unlike a
-native `.exe` which only runs on Windows.
-
 Note: on Windows, Docker Desktop's own background process (not `node.exe`) is what
 binds the port on the host, so if other devices can't reach it, check Windows
 Firewall for rules affecting **Docker Desktop** / `com.docker.backend.exe`, not
