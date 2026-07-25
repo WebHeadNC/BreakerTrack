@@ -1,0 +1,144 @@
+.ed {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ed-loading {
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.ed-top {
+  height: var(--topbar-h);
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-2);
+}
+
+.ed-title {
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.ed-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 0 auto;
+  background: var(--bg);
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+.ed-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.ed-tab:hover {
+  color: var(--text);
+}
+.ed-tab.active {
+  background: var(--surface-2);
+  color: var(--text);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.ed-top-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.icon-btn.has-sel {
+  color: var(--accent);
+}
+
+.ed-mode-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--bg);
+  padding: 3px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+}
+.ed-mode-toggle button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+}
+.ed-mode-toggle button:hover {
+  color: var(--text);
+}
+.ed-mode-toggle button.active {
+  background: var(--accent);
+  color: #06263a;
+}
+
+.ed-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.ed-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* --- Mobile ------------------------------------------------------------- */
+
+.ed-mobile .ed-body {
+  padding-bottom: 0;
+}
+
+.ed-bottomnav {
+  flex: 0 0 auto;
+  display: flex;
+  border-top: 1px solid var(--border);
+  background: var(--bg-2);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.ed-bnav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 9px 0;
+  border: none;
+  background: transparent;
+  color: var(--text-faint);
+  font-size: 11px;
+  font-weight: 600;
+}
+.ed-bnav-item.active {
+  color: var(--accent);
+}

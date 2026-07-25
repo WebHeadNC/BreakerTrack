@@ -1,0 +1,156 @@
+.pd {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.pd-grid {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  max-width: 560px;
+  padding: 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+
+.pd-bus {
+  align-self: stretch;
+  border-radius: 6px;
+  background: repeating-linear-gradient(
+    180deg,
+    var(--surface-3),
+    var(--surface-3) 6px,
+    var(--surface-2) 6px,
+    var(--surface-2) 12px
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pd-bus span {
+  writing-mode: vertical-rl;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: var(--text-faint);
+}
+
+/* Empty slot */
+.pd-empty {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px dashed var(--border-2);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-faint);
+  padding: 0 10px;
+  min-height: 46px;
+}
+.pd-empty:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(56, 189, 248, 0.05);
+}
+.pd-empty.col-1 {
+  flex-direction: row-reverse;
+}
+.pd-empty-plus {
+  opacity: 0.7;
+}
+/* View mode: empty slots are inert, not an "add" invitation. */
+.pd-empty-static {
+  border-style: solid;
+  border-color: var(--border);
+  opacity: 0.55;
+  cursor: default;
+}
+.pd-empty-static:hover {
+  border-color: var(--border);
+  color: var(--text-faint);
+  background: transparent;
+}
+
+/* Breaker block */
+.pd-breaker {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto auto;
+  align-content: center;
+  gap: 2px;
+  text-align: left;
+  padding: 7px 10px;
+  border-radius: 7px;
+  border: 1px solid var(--border-2);
+  border-left: 4px solid var(--type-color);
+  background: var(--surface);
+  color: var(--text);
+  overflow: hidden;
+}
+.pd-breaker.col-1 {
+  text-align: right;
+  border-left: 1px solid var(--border-2);
+  border-right: 4px solid var(--type-color);
+}
+.pd-breaker:hover {
+  border-color: var(--type-color);
+}
+.pd-breaker.sel {
+  outline: 2px solid var(--highlight);
+  outline-offset: 1px;
+  box-shadow: 0 0 0 4px var(--highlight-glow-soft);
+}
+
+.pd-breaker-slots {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-faint);
+  font-weight: 600;
+}
+.pd-breaker-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pd-breaker.col-1 .pd-breaker-main {
+  flex-direction: row-reverse;
+}
+.pd-breaker-amps {
+  font-size: 15px;
+  font-weight: 750;
+  font-family: var(--mono);
+}
+.pd-breaker-type {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: #06263a;
+  background: var(--type-color);
+}
+.pd-breaker-label {
+  font-size: 12px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pd-breaker-links {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.pd-breaker.col-1 .pd-breaker-links {
+  right: auto;
+  left: 6px;
+}

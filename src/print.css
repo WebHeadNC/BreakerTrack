@@ -1,0 +1,44 @@
+/* Print styles: hide the app chrome, show only the report. */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    background: #fff !important;
+    color: #0f172a !important;
+  }
+
+  /* Everything is hidden by default in print... */
+  body * {
+    visibility: hidden;
+  }
+
+  /* ...except the report subtree, which we reveal. */
+  .report,
+  .report * {
+    visibility: visible;
+  }
+
+  .report {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .page-break {
+    break-before: page;
+  }
+
+  .avoid-break {
+    break-inside: avoid;
+  }
+}

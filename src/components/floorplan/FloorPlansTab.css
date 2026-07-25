@@ -1,0 +1,195 @@
+.fpt {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.fpt-empty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+}
+
+/* Floor tabs bar */
+.fpt-floors {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-2);
+}
+.fpt-floor-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  flex: 1;
+  scrollbar-width: thin;
+}
+.fpt-floor-tab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.fpt-floor-tab.active {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--surface-2);
+}
+.fpt-floor-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+.fpt-floor-actions {
+  display: flex;
+  gap: 1px;
+}
+.icon-btn.sm-btn {
+  width: 24px;
+  height: 24px;
+}
+
+/* Work area */
+.fpt-work {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  position: relative;
+  /* Shared with the details flyout so it lines up exactly over the dock. */
+  --dock-w: 380px;
+}
+.fpt-palette {
+  flex: 0 0 240px;
+  border: none;
+  border-right: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--bg-2);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Breaker panel dock — desktop only, always visible alongside the floor plan */
+.fpt-panel-dock {
+  flex: 0 0 var(--dock-w);
+  border: none;
+  border-left: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--bg-2);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.fpt-panel-dock-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  text-align: center;
+}
+.fpt-panel-dock-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 10px 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.fpt-panel-dock-head .pt-panel-tabs {
+  flex: 1;
+  min-width: 0;
+}
+.fpt-panel-dock-meta {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.fpt-panel-dock-meta .pt-panel-specs {
+  font-size: 12px;
+  flex-direction: column;
+  gap: 3px;
+}
+.fpt-panel-dock-tools {
+  display: flex;
+  gap: 2px;
+  flex: 0 0 auto;
+}
+.fpt-panel-dock-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.fpt-panel-dock-scroll .pd {
+  padding: 14px;
+}
+
+@media (max-width: 1180px) {
+  .fpt-work {
+    --dock-w: 300px;
+  }
+  .fpt-palette {
+    flex-basis: 200px;
+  }
+}
+
+/* Mobile drawer */
+.fpt-palette-fab {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: none;
+  background: var(--accent);
+  color: #06263a;
+  font-weight: 700;
+  box-shadow: var(--shadow);
+}
+
+.fpt-drawer-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(2, 6, 23, 0.55);
+  display: flex;
+  align-items: flex-end;
+}
+.fpt-drawer {
+  width: 100%;
+  max-height: 70vh;
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  border-top: 1px solid var(--border-2);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.fpt-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+}

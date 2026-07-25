@@ -1,0 +1,219 @@
+.sp {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+/* Desktop: a flyout that opens over the breaker panel dock, not a permanent
+   column — it shares the dock's width var so it lines up exactly on top. */
+.sp-overlay {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: var(--dock-w, 380px);
+  z-index: 30;
+  border-left: 1px solid var(--border-2);
+  background: var(--bg-2);
+  box-shadow: -10px 0 28px rgba(0, 0, 0, 0.45);
+}
+
+.sp-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+
+.sp-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sp-nothing {
+  padding: 20px 4px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.sp-headline {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.sp-type-badge {
+  flex: 0 0 auto;
+  min-width: 48px;
+  text-align: center;
+  padding: 6px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #06263a;
+}
+.sp-fixture-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.sp-h-title {
+  font-size: 15px;
+  font-weight: 650;
+}
+.sp-h-sub {
+  font-size: 12.5px;
+}
+
+.sp-facts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+}
+.sp-facts > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sp-facts span {
+  font-size: 11px;
+}
+.sp-facts b {
+  font-size: 14px;
+}
+
+.sp-notes {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-dim);
+  background: var(--surface);
+  padding: 9px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.sp-btn-row {
+  display: flex;
+  gap: 8px;
+}
+.sp-linkbtn {
+  flex: 1;
+  width: 100%;
+}
+.sp-hint,
+.sp-empty {
+  font-size: 12px;
+  margin: 0;
+}
+
+.sp-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.sp-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.sp-list-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 2px 4px 2px 0;
+}
+.sp-list-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  text-align: left;
+  min-width: 0;
+}
+.sp-list-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+}
+.sp-list-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.sp-list-text > span:first-child {
+  font-size: 13px;
+  font-weight: 550;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sp-list-text > span:last-child {
+  font-size: 11px;
+}
+
+.sp-adjust {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 5px;
+}
+.sp-adjust .icon-btn:last-child:hover {
+  color: var(--danger);
+}
+
+.sp-jump {
+  width: 100%;
+}
+
+/* Mobile sheet */
+.sp-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  background: rgba(2, 6, 23, 0.55);
+  display: flex;
+  align-items: flex-end;
+}
+.sp-sheet {
+  width: 100%;
+  max-height: 78vh;
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  border-top: 1px solid var(--border-2);
+  padding-bottom: env(safe-area-inset-bottom);
+}

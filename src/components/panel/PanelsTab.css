@@ -1,0 +1,91 @@
+.pt {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.pt-empty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+}
+
+.pt-bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-2);
+}
+.pt-panel-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  flex: 1;
+}
+.pt-panel-tab {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pt-panel-tab.active {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.pt-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pt-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px;
+  padding: 14px 16px;
+}
+.pt-panel-meta h3 {
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+.pt-panel-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 13px;
+}
+.pt-panel-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pt-diagram-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.pcm-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 820px) {
+  .pt-panel-head {
+    flex-direction: column;
+  }
+}

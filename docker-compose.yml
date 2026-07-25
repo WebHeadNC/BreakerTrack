@@ -1,0 +1,12 @@
+services:
+  breakertrack:
+    build: .
+    container_name: breakertrack
+    ports:
+      - "3001:3001"
+    volumes:
+      - breakertrack-data:/app/server/data
+    restart: unless-stopped
+
+volumes:
+  breakertrack-data:
