@@ -1,5 +1,10 @@
 services:
   breakertrack:
+    # Pulled from GHCR by default (built by .github/workflows/docker-publish.yml
+    # on every push to master). `build: .` is also set, so on a machine with the
+    # source checked out you can still `docker compose up -d --build` to build
+    # locally instead of pulling.
+    image: ghcr.io/webheadnc/breakertrack:latest
     build: .
     container_name: breakertrack
     ports:

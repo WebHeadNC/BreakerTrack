@@ -51,19 +51,37 @@ also available individually.
 ### Docker
 
 Since there's no database — just JSON files and images on disk — this runs as a single
-container with one persistent volume:
+container with one persistent volume.
+
+**On a machine with this repo checked out**, build locally:
 
 ```bash
 docker compose up -d --build
 ```
 
-Then visit `http://localhost:3001`, or `http://<host's-LAN-IP>:3001` from any other
-device on the network — same as running it directly, just containerized. Project data
-lives in the `breakertrack-data` Docker volume, so it survives rebuilds/restarts;
-`docker compose down` stops it without losing data, `docker compose down -v` deletes
-the volume too (that *does* lose your data).
+**On any other machine** (no source needed — just the `docker-compose.yml` file),
+pull the image instead. Every push to `master` publishes a fresh image via
+[`.github/workflows/docker-publish.yml`](.github/workflows/docker-publish.yml) to
+GitHub Container Registry:
 
-To update after pulling code changes: `docker compose up -d --build` again.
+```bash
+docker login ghcr.io -u <your-github-username>   # one-time; repo is private, so the image is too
+docker compose pull
+docker compose up -d
+```
+
+For `docker login ghcr.io`, use a
+[personal access token](https://github.com/settings/tokens) with `read:packages`
+scope as the password (not your GitHub password).
+
+Either way: visit `http://localhost:3001`, or `http://<host's-LAN-IP>:3001` from any
+other device on the network. Project data lives in the `breakertrack-data` Docker
+volume, so it survives rebuilds/restarts; `docker compose down` stops it without
+losing data, `docker compose down -v` deletes the volume too (that *does* lose your
+data).
+
+To update: `docker compose up -d --build` (local build) or `docker compose pull &&
+docker compose up -d` (pulled image) again.
 
 Note: on Windows, Docker Desktop's own background process (not `node.exe`) is what
 binds the port on the host, so if other devices can't reach it, check Windows
