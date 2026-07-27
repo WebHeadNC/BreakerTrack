@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Floor, IconType } from '../../types'
 import { useStore } from '../../lib/store'
 import { blobUrl } from '../../lib/api'
+import { toggleLinkPlacementBreaker } from '../../lib/linking'
+import { useIsMobile } from '../../lib/useIsMobile'
 import MarkerIcon from '../common/MarkerIcon'
 import './FloorPlanCanvas.css'
 
@@ -23,6 +25,38 @@ const MIN_SCALE = 0.05
 const MAX_SCALE = 8
 const TAP_SLOP = 6 // px of movement still considered a tap
 
+const BADGE_PX = 38 // must match .fpc-marker-badge width/height in FloorPlanCanvas.css
+const MIN_MARKER_PX = 16
+
+/**
+ * Markers live inside the pannable/zoomable `.fpc-layer`, so they naturally
+ * zoom with the floor plan. Sizing is relative to `fitScale` (the view scale
+ * at the initial fit-to-view "default full screen" zoom), not the raw view
+ * scale, so the default look can differ from the zoomed-in ceiling:
+ *  - the ceiling (`maxPx`) is `BADGE_PX * placementScale` — the constant
+ *    on-screen size markers used to always render at, before they zoomed
+ *    with the floor plan. Zooming in from the default view grows markers
+ *    back up toward that familiar size, never past it.
+ *  - the default full-screen-view size is smaller than that ceiling: 1/3
+ *    smaller on desktop, and pinned to the legible floor (`MIN_MARKER_PX`)
+ *    on mobile, where screens are cramped.
+ *  - zooming out from the default view shrinks markers, floored at
+ *    `MIN_MARKER_PX` so they never vanish.
+ */
+function markerScale(
+  placementScale: number,
+  viewScale: number,
+  fitScale: number,
+  isMobile: boolean,
+): number {
+  const maxPx = BADGE_PX * placementScale
+  const defaultPx = isMobile ? MIN_MARKER_PX : (maxPx * 2) / 3
+  const ratio = fitScale > 0 ? viewScale / fitScale : 1
+  const naturalPx = defaultPx * ratio
+  const clampedPx = Math.min(maxPx, Math.max(MIN_MARKER_PX, naturalPx))
+  return clampedPx / (BADGE_PX * viewScale)
+}
+
 function capture(e: React.PointerEvent) {
   try {
     ;(e.target as Element).setPointerCapture?.(e.pointerId)
@@ -39,14 +73,15 @@ export default function FloorPlanCanvas({
 }: Props) {
   const viewportRef = useRef<HTMLDivElement>(null)
   const [view, setView] = useState<View>({ scale: 1, tx: 0, ty: 0 })
+  const [fitScale, setFitScale] = useState(1)
   const imageUrl = floor.imageId ? blobUrl(floor.imageId) : undefined
+  const isMobile = useIsMobile()
 
   const selection = useStore((s) => s.selection)
   const select = useStore((s) => s.select)
   const mode = useStore((s) => s.mode)
   const isEdit = mode === 'edit'
   const linkMode = useStore((s) => s.linkMode)
-  const toggleLink = useStore((s) => s.toggleLink)
   const updatePlacement = useStore((s) => s.updatePlacement)
 
   const catalogById = useMemo(
@@ -54,23 +89,26 @@ export default function FloorPlanCanvas({
     [catalog],
   )
 
-  // The breaker "in view" — either directly selected, or the owner of the
-  // selected placement. Every placement wired to that breaker rings together,
-  // so picking either an icon or a breaker reveals the whole circuit.
-  const relevantBreakerId = useMemo(() => {
-    if (selection?.kind === 'breaker') return selection.id
+  // The breaker(s) "in view" — either directly selected, or all owners of the
+  // selected placement. Every placement sharing any of those breakers rings
+  // together, so picking either an icon or a breaker reveals the whole circuit.
+  const relevantBreakerIds = useMemo(() => {
+    if (selection?.kind === 'breaker') return new Set([selection.id])
     if (selection?.kind === 'placement') {
-      return floor.placements.find((p) => p.id === selection.id)?.breakerId ?? null
+      const pl = floor.placements.find((p) => p.id === selection.id)
+      return new Set(pl?.breakerIds ?? [])
     }
-    return null
+    return new Set<string>()
   }, [selection, floor.placements])
 
   const highlightedIds = useMemo(() => {
-    if (!relevantBreakerId) return new Set<string>()
+    if (relevantBreakerIds.size === 0) return new Set<string>()
     return new Set(
-      floor.placements.filter((p) => p.breakerId === relevantBreakerId).map((p) => p.id),
+      floor.placements
+        .filter((p) => p.breakerIds.some((id) => relevantBreakerIds.has(id)))
+        .map((p) => p.id),
     )
-  }, [relevantBreakerId, floor.placements])
+  }, [relevantBreakerIds, floor.placements])
 
   const selectedBreakerId = selection?.kind === 'breaker' ? selection.id : null
 
@@ -86,6 +124,7 @@ export default function FloorPlanCanvas({
       tx: (cw - floor.imgW * scale) / 2,
       ty: (ch - floor.imgH * scale) / 2,
     })
+    setFitScale(scale)
   }, [floor.imgW, floor.imgH])
 
   // Fit when the floor changes.
@@ -233,7 +272,7 @@ export default function FloorPlanCanvas({
     // Tap on a marker: link toggle in link mode, else select (which also
     // highlights the owning breaker in the panel diagram).
     if (isEdit && linkMode && selectedBreakerId) {
-      toggleLink(selectedBreakerId, id)
+      void toggleLinkPlacementBreaker(id, selectedBreakerId)
     } else {
       select({ kind: 'placement', id })
     }
@@ -284,11 +323,11 @@ export default function FloorPlanCanvas({
               key={p.id}
               className={`fpc-marker ${isSel ? 'sel' : ''} ${isHi ? 'hi' : ''} ${
                 linkable ? 'linkable' : ''
-              } ${p.breakerId ? 'linked' : ''}`}
+              } ${p.breakerIds.length > 0 ? 'linked' : ''}`}
               style={{
                 left: p.x,
                 top: p.y,
-                transform: `translate(-50%, -50%) scale(${p.scale / view.scale}) rotate(${p.rotation}deg)`,
+                transform: `translate(-50%, -50%) scale(${markerScale(p.scale, view.scale, fitScale, isMobile)}) rotate(${p.rotation}deg)`,
                 ['--marker-color' as string]: icon?.color ?? '#94a3b8',
               }}
               onPointerDown={(e) => onMarkerPointerDown(e, p.id)}

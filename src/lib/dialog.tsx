@@ -22,6 +22,13 @@ type Req =
       danger?: boolean
       resolve: (v: boolean) => void
     }
+  | {
+      kind: 'choose'
+      title: string
+      message: string
+      choices: { value: string; label: string }[]
+      resolve: (v: string | null) => void
+    }
 
 let current: Req | null = null
 const listeners = new Set<() => void>()
@@ -77,6 +84,24 @@ export function confirmDialog(opts: {
   })
 }
 
+/** A dialog offering several named choices, plus an implicit cancel. Resolves to the chosen value, or null if dismissed. */
+export function chooseDialog(opts: {
+  title: string
+  message: string
+  choices: { value: string; label: string }[]
+}): Promise<string | null> {
+  return new Promise((resolve) => {
+    current = {
+      kind: 'choose',
+      title: opts.title,
+      message: opts.message,
+      choices: opts.choices,
+      resolve,
+    }
+    emit()
+  })
+}
+
 function close() {
   current = null
   emit()
@@ -90,12 +115,52 @@ export function DialogHost() {
   if (req.kind === 'prompt') {
     return <PromptView req={req} onDone={close} />
   }
+
+  if (req.kind === 'choose') {
+    return (
+      <Modal
+        title={req.title}
+        onClose={() => {
+          req.resolve(null)
+          close()
+        }}
+        footer={
+          <>
+            <button
+              className="btn ghost"
+              onClick={() => {
+                req.resolve(null)
+                close()
+              }}
+            >
+              Cancel
+            </button>
+            {req.choices.map((c, i) => (
+              <button
+                key={c.value}
+                className={`btn ${i === req.choices.length - 1 ? 'primary' : ''}`}
+                onClick={() => {
+                  req.resolve(c.value)
+                  close()
+                }}
+              >
+                {c.label}
+              </button>
+            ))}
+          </>
+        }
+      >
+        <p style={{ margin: 0, color: 'var(--text-dim)', lineHeight: 1.5 }}>{req.message}</p>
+      </Modal>
+    )
+  }
+
   return (
     <Modal
       title={req.title}
       onClose={() => {
         req.resolve(false)
-        onDoneClose()
+        close()
       }}
       footer={
         <>
@@ -123,10 +188,6 @@ export function DialogHost() {
       <p style={{ margin: 0, color: 'var(--text-dim)', lineHeight: 1.5 }}>{req.message}</p>
     </Modal>
   )
-}
-
-function onDoneClose() {
-  close()
 }
 
 function PromptView({

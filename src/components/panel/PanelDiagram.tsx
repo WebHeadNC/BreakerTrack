@@ -26,22 +26,22 @@ export default function PanelDiagram({ panel, editable, onAddAtSlot }: Props) {
     const m = new Map<string, number>()
     for (const f of project.floors) {
       for (const pl of f.placements) {
-        if (pl.breakerId) m.set(pl.breakerId, (m.get(pl.breakerId) ?? 0) + 1)
+        for (const bid of pl.breakerIds) m.set(bid, (m.get(bid) ?? 0) + 1)
       }
     }
     return m
   }, [project.floors])
 
-  // Which breaker is highlighted (directly selected, or owner of selected placement).
-  const selectedBreakerId = useMemo(() => {
-    if (selection?.kind === 'breaker') return selection.id
+  // Which breaker(s) are highlighted (directly selected, or all owners of the selected placement).
+  const selectedBreakerIds = useMemo(() => {
+    if (selection?.kind === 'breaker') return new Set([selection.id])
     if (selection?.kind === 'placement') {
       for (const f of project.floors) {
         const pl = f.placements.find((p) => p.id === selection.id)
-        if (pl) return pl.breakerId ?? null
+        if (pl) return new Set(pl.breakerIds)
       }
     }
-    return null
+    return new Set<string>()
   }, [selection, project.floors])
 
   const twoCol = panel.columns === 2
@@ -105,7 +105,7 @@ export default function PanelDiagram({ panel, editable, onAddAtSlot }: Props) {
           const meta = BREAKER_TYPE_META[breaker.type]
           const slots = breakerSlots(panel, breaker)
           const links = linkCounts.get(breaker.id) ?? 0
-          const isSel = selectedBreakerId === breaker.id
+          const isSel = selectedBreakerIds.has(breaker.id)
           const startCell = layout.bySlot.get(breaker.startSlot)!
 
           return (

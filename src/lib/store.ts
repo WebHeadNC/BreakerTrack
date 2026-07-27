@@ -84,7 +84,7 @@ interface AppState {
   deleteBreaker: (id: string) => void
 
   // Linking
-  toggleLink: (breakerId: string, placementId: string) => void
+  setPlacementBreakers: (placementId: string, breakerIds: string[]) => void
 }
 
 // --- Debounced save to the server, with a guard against remote broadcasts --
@@ -353,7 +353,7 @@ export const useStore = create<AppState>((set, get) => {
         // Unlink placements pointing at breakers of the removed panel.
         for (const f of p.floors) {
           for (const pl of f.placements) {
-            if (pl.breakerId && removed.has(pl.breakerId)) pl.breakerId = undefined
+            pl.breakerIds = pl.breakerIds.filter((bid) => !removed.has(bid))
           }
         }
       })
@@ -385,7 +385,7 @@ export const useStore = create<AppState>((set, get) => {
         // Unlink placements referencing this breaker.
         for (const f of p.floors) {
           for (const pl of f.placements) {
-            if (pl.breakerId === id) pl.breakerId = undefined
+            pl.breakerIds = pl.breakerIds.filter((bid) => bid !== id)
           }
         }
       })
@@ -394,12 +394,12 @@ export const useStore = create<AppState>((set, get) => {
       }
     },
 
-    toggleLink(breakerId, placementId) {
+    setPlacementBreakers(placementId, breakerIds) {
       mutate((p) => {
         for (const f of p.floors) {
           const pl = f.placements.find((x) => x.id === placementId)
           if (pl) {
-            pl.breakerId = pl.breakerId === breakerId ? undefined : breakerId
+            pl.breakerIds = breakerIds
             return
           }
         }

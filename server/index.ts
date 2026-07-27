@@ -48,11 +48,31 @@ function isValidId(id: string): boolean {
   return /^[0-9a-f-]{36}$/i.test(id)
 }
 
+// Placements used to carry a single optional `breakerId`; they now carry a
+// `breakerIds` array (to support linking one fixture to more than one
+// breaker). Upgrade older project files in place as they're read so a
+// pre-existing deployment doesn't crash on load.
+function normalizeProject(project: any): any {
+  for (const floor of project.floors ?? []) {
+    for (const pl of floor.placements ?? []) {
+      if (!Array.isArray(pl.breakerIds)) {
+        pl.breakerIds = pl.breakerId ? [pl.breakerId] : []
+      }
+      delete pl.breakerId
+    }
+  }
+  return project
+}
+
+function readProjectFile(file: string): any {
+  return normalizeProject(JSON.parse(fs.readFileSync(file, 'utf8')))
+}
+
 // --- Projects ----------------------------------------------------------------
 
 app.get('/api/projects', (_req, res) => {
   const files = fs.readdirSync(PROJECTS_DIR).filter((f) => f.endsWith('.json'))
-  const projects = files.map((f) => JSON.parse(fs.readFileSync(path.join(PROJECTS_DIR, f), 'utf8')))
+  const projects = files.map((f) => readProjectFile(path.join(PROJECTS_DIR, f)))
   res.json(projects)
 })
 
@@ -60,7 +80,7 @@ app.get('/api/projects/:id', (req, res) => {
   if (!isValidId(req.params.id)) return res.status(400).json({ error: 'bad id' })
   const file = projectFilePath(req.params.id)
   if (!fs.existsSync(file)) return res.status(404).json({ error: 'not found' })
-  res.json(JSON.parse(fs.readFileSync(file, 'utf8')))
+  res.json(readProjectFile(file))
 })
 
 app.post('/api/projects', (req, res) => {

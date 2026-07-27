@@ -28,8 +28,8 @@ export interface Placement {
   rotation: number
   scale: number
   label: string
-  /** The breaker powering this fixture, if linked. */
-  breakerId?: string
+  /** Breaker(s) powering this fixture. Usually one; can be more if dual-mapped. */
+  breakerIds: string[]
 }
 
 export interface Floor {

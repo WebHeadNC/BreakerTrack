@@ -109,9 +109,9 @@
   }
 }
 
-/* Link mode: candidates invite a tap. */
+/* Link mode: candidates invite a tap (but unlinked markers keep their dashed
+   ring — solid vs. dashed is reserved for actual link status). */
 .fpc.linking .fpc-marker.linkable .fpc-marker-badge {
-  border-style: solid;
   cursor: copy;
 }
 .fpc.linking .fpc-marker.linkable:hover .fpc-marker-badge {

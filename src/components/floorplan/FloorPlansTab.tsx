@@ -7,6 +7,7 @@ import {
   Plus,
   Settings2,
   Trash2,
+  TriangleAlert,
   X,
 } from 'lucide-react'
 import type { Panel } from '../../types'
@@ -97,10 +98,10 @@ export default function FloorPlansTab() {
   // (so the highlighted markers are actually on screen).
   useEffect(() => {
     if (selection?.kind !== 'breaker') return
-    const hereHas = activeFloor?.placements.some((p) => p.breakerId === selection.id)
+    const hereHas = activeFloor?.placements.some((p) => p.breakerIds.includes(selection.id))
     if (hereHas) return
     const target = floors.find((f) =>
-      f.placements.some((p) => p.breakerId === selection.id),
+      f.placements.some((p) => p.breakerIds.includes(selection.id)),
     )
     if (target && target.id !== activeFloorId) setActiveFloor(target.id)
   }, [selection, floors, activeFloor, activeFloorId, setActiveFloor])
@@ -141,6 +142,7 @@ export default function FloorPlansTab() {
       rotation: 0,
       scale: 1,
       label: '',
+      breakerIds: [],
     })
     // Keep armed so multiple can be dropped quickly.
   }
@@ -210,6 +212,21 @@ export default function FloorPlansTab() {
     selection?.kind === 'breaker' ? 'Breaker' : selection?.kind === 'placement' ? 'Item' : ''
   const detailsLabel = `${detailsOpen ? 'Close' : 'Show'}${detailsNoun ? ` ${detailsNoun}` : ''} Details`
 
+  // Warn when the selection touches a multi-mapped item — either the
+  // selected item itself is wired to more than one breaker, or a selected
+  // breaker has a linked item that's also wired to another breaker.
+  const showMultiBreakerCaution = (() => {
+    if (!selection) return false
+    const allPlacements = floors.flatMap((f) => f.placements)
+    if (selection.kind === 'placement') {
+      const pl = allPlacements.find((p) => p.id === selection.id)
+      return (pl?.breakerIds.length ?? 0) > 1
+    }
+    return allPlacements.some(
+      (p) => p.breakerIds.includes(selection.id) && p.breakerIds.length > 1,
+    )
+  })()
+
   return (
     <div className={`fpt ${isMobile ? 'fpt-mobile' : ''}`}>
       {/* Floor tabs */}
@@ -249,28 +266,36 @@ export default function FloorPlansTab() {
             </div>
           ))}
         </div>
-        {isEdit && (
-          <button
-            className="btn sm"
-            onClick={() => fileRef.current?.click()}
-            title="Add floor"
-          >
-            <Plus size={14} /> Floor
-          </button>
+        {showMultiBreakerCaution && (
+          <span className="fpt-caution">
+            <TriangleAlert size={14} />
+            Caution item connected to more than 1 breaker.
+          </span>
         )}
-        {!isMobile && !isEdit && selection && (
-          <button
-            className={`btn sm ${detailsOpen ? 'primary' : ''}`}
-            onClick={() => setDetailsOpen((v) => !v)}
-            title={
-              detailsOpen
-                ? 'Hide the details panel'
-                : 'Show details for the current selection'
-            }
-          >
-            <PanelRight size={14} /> {detailsLabel}
-          </button>
-        )}
+        <div className="fpt-floors-end">
+          {isEdit && (
+            <button
+              className="btn sm"
+              onClick={() => fileRef.current?.click()}
+              title="Add floor"
+            >
+              <Plus size={14} /> Floor
+            </button>
+          )}
+          {!isMobile && !isEdit && selection && (
+            <button
+              className={`btn sm ${detailsOpen ? 'primary' : ''}`}
+              onClick={() => setDetailsOpen((v) => !v)}
+              title={
+                detailsOpen
+                  ? 'Hide the details panel'
+                  : 'Show details for the current selection'
+              }
+            >
+              <PanelRight size={14} /> {detailsLabel}
+            </button>
+          )}
+        </div>
         <input
           ref={fileRef}
           type="file"

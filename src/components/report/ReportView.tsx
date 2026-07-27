@@ -87,7 +87,7 @@ function PanelSchedule({
   const linkedFor = (breakerId: string) =>
     project.floors.flatMap((f) =>
       f.placements
-        .filter((p) => p.breakerId === breakerId)
+        .filter((p) => p.breakerIds.includes(breakerId))
         .map((p) => {
           const name = p.label || catalogById.get(p.iconTypeId)?.name || 'Fixture'
           return `${name} (${f.name})`
@@ -202,7 +202,9 @@ function FloorReport({
             <ol className="rp-legend-list">
               {numbered.map(({ p, n }) => {
                 const icon = catalogById.get(p.iconTypeId)
-                const owner = p.breakerId ? breakerIndex.get(p.breakerId) : undefined
+                const owners = p.breakerIds
+                  .map((id) => breakerIndex.get(id))
+                  .filter((o): o is { breaker: Breaker; panel: Panel } => !!o)
                 return (
                   <li key={p.id}>
                     <span className="rp-legend-n">{n}</span>
@@ -211,11 +213,13 @@ function FloorReport({
                     </span>
                     <span className="rp-legend-text">
                       <b>{p.label || icon?.name || 'Fixture'}</b>
-                      {owner ? (
-                        <span className="rp-legend-ckt">
-                          {owner.panel.name} · slot {owner.breaker.startSlot} ·{' '}
-                          {owner.breaker.amps}A {BREAKER_TYPE_META[owner.breaker.type].short}
-                        </span>
+                      {owners.length > 0 ? (
+                        owners.map((owner) => (
+                          <span key={owner.breaker.id} className="rp-legend-ckt">
+                            {owner.panel.name} · slot {owner.breaker.startSlot} ·{' '}
+                            {owner.breaker.amps}A {BREAKER_TYPE_META[owner.breaker.type].short}
+                          </span>
+                        ))
                       ) : (
                         <span className="rp-legend-ckt rp-dim">Unlinked</span>
                       )}

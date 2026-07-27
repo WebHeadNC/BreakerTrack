@@ -13,6 +13,7 @@ import {
 import type { Breaker, Panel, Placement } from '../../types'
 import { BREAKER_TYPE_META } from '../../types'
 import { useStore } from '../../lib/store'
+import { linkPlacementToBreaker, unlinkPlacementBreaker } from '../../lib/linking'
 import MarkerIcon from './MarkerIcon'
 import './SelectionPanel.css'
 
@@ -36,7 +37,6 @@ export default function SelectionPanel({ isMobile, open, onClose, onGoToFloors }
   const isEdit = mode === 'edit'
   const linkMode = useStore((s) => s.linkMode)
   const setLinkMode = useStore((s) => s.setLinkMode)
-  const toggleLink = useStore((s) => s.toggleLink)
   const updatePlacement = useStore((s) => s.updatePlacement)
   const deletePlacement = useStore((s) => s.deletePlacement)
   const setActiveFloor = useStore((s) => s.setActiveFloor)
@@ -85,7 +85,7 @@ export default function SelectionPanel({ isMobile, open, onClose, onGoToFloors }
       const meta = BREAKER_TYPE_META[breaker.type]
       const linked = project.floors.flatMap((f) =>
         f.placements
-          .filter((p) => p.breakerId === breaker.id)
+          .filter((p) => p.breakerIds.includes(breaker.id))
           .map((p) => ({ placement: p, floorName: f.name })),
       )
       return (
@@ -162,7 +162,7 @@ export default function SelectionPanel({ isMobile, open, onClose, onGoToFloors }
                     <button
                       className="icon-btn"
                       title="Unlink"
-                      onClick={() => toggleLink(breaker.id, placement.id)}
+                      onClick={() => unlinkPlacementBreaker(placement.id, breaker.id)}
                     >
                       <Link2Off size={15} />
                     </button>
@@ -178,9 +178,12 @@ export default function SelectionPanel({ isMobile, open, onClose, onGoToFloors }
     if (selectedPlacement) {
       const { placement, floorName } = selectedPlacement
       const icon = catalogById.get(placement.iconTypeId)
-      const owner = placement.breakerId
-        ? allBreakers.find((b) => b.breaker.id === placement.breakerId)
-        : undefined
+      const owners = placement.breakerIds
+        .map((id) => allBreakers.find((b) => b.breaker.id === id))
+        .filter((b): b is FoundBreaker => !!b)
+      const availableToAdd = allBreakers.filter(
+        ({ breaker }) => !placement.breakerIds.includes(breaker.id),
+      )
       return (
         <>
           <div className="sp-headline">
@@ -237,48 +240,63 @@ export default function SelectionPanel({ isMobile, open, onClose, onGoToFloors }
                 </button>
               </div>
 
-              <div className="sp-section-title">Powered by</div>
-              <div className="field">
-                <select
-                  value={placement.breakerId ?? ''}
-                  onChange={(e) =>
-                    updatePlacement(placement.id, { breakerId: e.target.value || undefined })
-                  }
-                >
-                  <option value="">— Not linked —</option>
-                  {allBreakers.map(({ breaker, panel }) => (
-                    <option key={breaker.id} value={breaker.id}>
-                      {panel.name} · slot {breaker.startSlot} · {breaker.amps}A{' '}
-                      {BREAKER_TYPE_META[breaker.type].short}
-                      {breaker.label ? ` · ${breaker.label}` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </>
+          ) : null}
+
+          <div className="sp-section-title">Powered by ({owners.length})</div>
+          {owners.length === 0 ? (
+            <p className="sp-empty muted">Not linked to a breaker.</p>
           ) : (
-            <div className="sp-section-title">Powered by</div>
+            <ul className="sp-list">
+              {owners.map(({ breaker, panel }) => (
+                <li key={breaker.id} className="sp-list-item">
+                  <button
+                    className="sp-list-main"
+                    onClick={() => select({ kind: 'breaker', id: breaker.id })}
+                  >
+                    <span className="sp-list-text">
+                      <span>{breaker.label || `Breaker ${breaker.startSlot}`}</span>
+                      <span className="muted">
+                        {panel.name} · slot {breaker.startSlot} · {breaker.amps}A{' '}
+                        {BREAKER_TYPE_META[breaker.type].short}
+                      </span>
+                    </span>
+                    <Link2 size={13} className="muted" />
+                  </button>
+                  {isEdit && (
+                    <button
+                      className="icon-btn"
+                      title="Unlink"
+                      onClick={() => unlinkPlacementBreaker(placement.id, breaker.id)}
+                    >
+                      <Link2Off size={15} />
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
           )}
 
-          {!isEdit &&
-            (owner ? (
-              <p className="sp-notes">
-                {owner.panel.name} · slot {owner.breaker.startSlot} · {owner.breaker.amps}A{' '}
-                {BREAKER_TYPE_META[owner.breaker.type].short}
-                {owner.breaker.label ? ` · ${owner.breaker.label}` : ''}
-              </p>
-            ) : (
-              <p className="sp-empty muted">Not linked to a breaker.</p>
-            ))}
-
-          {owner && (
-            <button
-              className="btn sm sp-jump"
-              onClick={() => select({ kind: 'breaker', id: owner.breaker.id })}
-            >
-              <Link2 size={14} /> Show breaker in panel
-            </button>
+          {isEdit && availableToAdd.length > 0 && (
+            <div className="field">
+              <select
+                value=""
+                onChange={(e) => {
+                  if (e.target.value) void linkPlacementToBreaker(placement.id, e.target.value)
+                }}
+              >
+                <option value="">+ Add a breaker…</option>
+                {availableToAdd.map(({ breaker, panel }) => (
+                  <option key={breaker.id} value={breaker.id}>
+                    {panel.name} · slot {breaker.startSlot} · {breaker.amps}A{' '}
+                    {BREAKER_TYPE_META[breaker.type].short}
+                    {breaker.label ? ` · ${breaker.label}` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
           )}
+
           {!isEdit && (
             <p className="sp-hint muted">Switch to Edit mode to rename, move, or relink this icon.</p>
           )}
