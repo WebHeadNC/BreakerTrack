@@ -117,7 +117,16 @@ export default function SelectionPanel({ isMobile, open, onClose, onGoToFloors }
               <div className="sp-btn-row">
                 <button
                   className={`btn ${linkMode ? 'primary' : ''} sp-linkbtn`}
-                  onClick={() => setLinkMode(!linkMode)}
+                  onClick={() => {
+                    const turningOn = !linkMode
+                    setLinkMode(turningOn)
+                    // On mobile the floor plan lives on its own tab behind
+                    // this drawer — jump to it so there's something to tap.
+                    if (turningOn && isMobile) {
+                      onClose()
+                      onGoToFloors?.()
+                    }
+                  }}
                 >
                   <Link2 size={15} />
                   {linkMode ? 'Linking…' : 'Link fixtures'}

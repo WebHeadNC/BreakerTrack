@@ -56,14 +56,95 @@
   display: flex;
   gap: 1px;
 }
+
+/* Marks a floor as holding an item wired to the breaker currently in view,
+   so it's obvious which other floors are worth checking. */
+.fpt-floor-link-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--highlight);
+  flex: 0 0 auto;
+}
+
+/* Mobile floor picker — a single button (current floor name) opening a
+   drawer, instead of a tab row that stops working once there are more than
+   a couple of floors. */
+.fpt-floor-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 70%;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+.fpt-floor-select .fpt-floor-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fpt-floor-select svg {
+  flex: 0 0 auto;
+  color: var(--text-dim);
+}
+
+.fpt-floor-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 16px 16px;
+  overflow-y: auto;
+}
+.fpt-floor-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.fpt-floor-menu-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+  font-weight: 600;
+}
+.fpt-floor-menu-item.active .fpt-floor-menu-main {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--surface-2);
+}
+.fpt-floor-menu-add {
+  justify-content: center;
+  margin-top: 4px;
+}
 .icon-btn.sm-btn {
   width: 24px;
   height: 24px;
 }
 
-.fpt-caution {
+/* Wraps one or two caution badges (multi-breaker, cross-floor) so they
+   stack in the same centered slot instead of fighting for it. */
+.fpt-cautions {
   grid-column: 2;
   justify-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.fpt-caution {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -87,6 +168,23 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* Mobile swaps the tab row for the single floor-select button (above), so
+   this just keeps the row from fighting for space with the (rare) caution
+   message, which wraps to its own line instead. */
+@media (max-width: 820px) {
+  .fpt-floors {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .fpt-floors-end {
+    flex: 0 0 auto;
+  }
+  .fpt-cautions {
+    flex: 1 1 100%;
+    order: 3;
+  }
 }
 
 /* Work area */

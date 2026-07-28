@@ -5,6 +5,7 @@ import {
   Eye,
   LayoutDashboard,
   LayoutGrid,
+  Link2,
   Map as MapIcon,
   PanelRight,
   Pencil,
@@ -46,6 +47,8 @@ export default function Editor() {
   const selection = useStore((s) => s.selection)
   const mode = useStore((s) => s.mode)
   const setMode = useStore((s) => s.setMode)
+  const linkMode = useStore((s) => s.linkMode)
+  const setLinkMode = useStore((s) => s.setLinkMode)
   const [tab, setTab] = useState<Tab>('floors')
   const [drawerOpen, setDrawerOpen] = useState(false)
 
@@ -61,10 +64,26 @@ export default function Editor() {
     if (!isMobile && tab === 'panels') setTab('floors')
   }, [isMobile, tab])
 
-  // Open the selection drawer on mobile whenever something is selected.
+  // Open the selection drawer on mobile whenever something is selected — and,
+  // since the floor plan and the breaker panel live on separate tabs here
+  // (unlike desktop, where both are visible together), also jump to
+  // whichever tab actually shows the thing it's connected to, so the
+  // highlighted ring lands on screen instead of on a tab the user isn't on.
   useEffect(() => {
-    if (isMobile && selection) setDrawerOpen(true)
-  }, [selection, isMobile])
+    if (!isMobile || !selection || !project) return
+    setDrawerOpen(true)
+    if (selection.kind === 'breaker') {
+      const hasFixture = project.floors.some((f) =>
+        f.placements.some((p) => p.breakerIds.includes(selection.id)),
+      )
+      if (hasFixture) setTab('floors')
+    } else {
+      const placement = project.floors
+        .flatMap((f) => f.placements)
+        .find((p) => p.id === selection.id)
+      if (placement && placement.breakerIds.length > 0) setTab('panels')
+    }
+  }, [selection, isMobile, project])
 
   // The project was deleted (by us or someone else) or never existed —
   // there's nothing to show here, so head back to the project list.
@@ -81,6 +100,14 @@ export default function Editor() {
   }
 
   const showReport = tab === 'report'
+
+  // Mobile has no always-visible breaker panel to show "you're linking this
+  // breaker" — so while link mode is on, a banner stands in for it (with an
+  // end button, since there's otherwise no indication link mode is active).
+  const linkingBreaker =
+    isMobile && linkMode && selection?.kind === 'breaker'
+      ? project.panels.flatMap((p) => p.breakers).find((b) => b.id === selection.id) ?? null
+      : null
 
   return (
     <div className={`ed ${isMobile ? 'ed-mobile' : ''}`}>
@@ -142,6 +169,18 @@ export default function Editor() {
           )}
         </div>
       </header>
+
+      {linkingBreaker && (
+        <div className="ed-link-banner no-print">
+          <Link2 size={14} />
+          <span>
+            Link to breaker ({linkingBreaker.label || `Breaker ${linkingBreaker.startSlot}`})
+          </span>
+          <button className="btn sm" onClick={() => setLinkMode(false)}>
+            End
+          </button>
+        </div>
+      )}
 
       <div className="ed-body">
         <main className="ed-content">

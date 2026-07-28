@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
+  ChevronDown,
   ImagePlus,
   Layers,
   PanelRight,
@@ -48,9 +49,12 @@ export default function FloorPlansTab() {
   const deleteFloor = useStore((s) => s.deleteFloor)
   const mode = useStore((s) => s.mode)
   const isEdit = mode === 'edit'
+  const linkMode = useStore((s) => s.linkMode)
+  const setLinkMode = useStore((s) => s.setLinkMode)
 
   const [armed, setArmed] = useState<string | null>(null)
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const [floorMenuOpen, setFloorMenuOpen] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const addPlacement = useStore((s) => s.addPlacement)
 
@@ -94,18 +98,6 @@ export default function FloorPlansTab() {
     }
   }, [panels, activePanelId, setActivePanel])
 
-  // When a breaker is selected, jump to a floor that has one of its fixtures
-  // (so the highlighted markers are actually on screen).
-  useEffect(() => {
-    if (selection?.kind !== 'breaker') return
-    const hereHas = activeFloor?.placements.some((p) => p.breakerIds.includes(selection.id))
-    if (hereHas) return
-    const target = floors.find((f) =>
-      f.placements.some((p) => p.breakerIds.includes(selection.id)),
-    )
-    if (target && target.id !== activeFloorId) setActiveFloor(target.id)
-  }, [selection, floors, activeFloor, activeFloorId, setActiveFloor])
-
   // Details flyout (desktop only): opens over the breaker panel.
   // Edit mode: automatic — a fresh selection (even re-clicking the same
   // thing) always reveals it. Deselecting always closes it.
@@ -117,10 +109,19 @@ export default function FloorPlansTab() {
     if (isMobile) return
     if (!selection) {
       setDetailsOpen(false)
+      if (linkMode) setLinkMode(false)
       return
     }
     if (isEdit) setDetailsOpen(true)
-  }, [selection, isEdit, isMobile])
+  }, [selection, isEdit, isMobile, linkMode, setLinkMode])
+
+  // Closing the details panel while linking fixtures leaves link mode on
+  // with nothing on screen to show it's active (or which breaker it's for)
+  // — so closing it always ends link mode too.
+  function closeDetails() {
+    setDetailsOpen(false)
+    if (linkMode) setLinkMode(false)
+  }
 
   async function onUploadNewFloor(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -227,53 +228,99 @@ export default function FloorPlansTab() {
     )
   })()
 
+  // Floors holding an item wired to the same breaker(s) as the current
+  // selection — mirrors the marker-ring logic on the canvas, so the floor
+  // tabs can point out other floors worth checking, and a breaker spanning
+  // more than one floor gets its own caution alongside the multi-breaker one.
+  const relevantBreakerIds = (() => {
+    if (!selection) return new Set<string>()
+    if (selection.kind === 'breaker') return new Set([selection.id])
+    const pl = floors.flatMap((f) => f.placements).find((p) => p.id === selection.id)
+    return new Set(pl?.breakerIds ?? [])
+  })()
+  const connectedFloorIds = new Set(
+    floors
+      .filter((f) =>
+        f.placements.some((p) => p.breakerIds.some((id) => relevantBreakerIds.has(id))),
+      )
+      .map((f) => f.id),
+  )
+  const showCrossFloorCaution = connectedFloorIds.size > 1
+
   return (
     <div className={`fpt ${isMobile ? 'fpt-mobile' : ''}`}>
       {/* Floor tabs */}
       <div className="fpt-floors no-print">
-        <div className="fpt-floor-tabs">
-          {floors.map((f) => (
-            <div
-              key={f.id}
-              className={`fpt-floor-tab ${f.id === activeFloorId ? 'active' : ''}`}
-              onClick={() => setActiveFloor(f.id)}
-            >
-              <span className="fpt-floor-name">{f.name}</span>
-              {isEdit && f.id === activeFloorId && (
-                <span className="fpt-floor-actions">
-                  <button
-                    className="icon-btn sm-btn"
-                    title="Rename"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onRenameFloor(f.id, f.name)
-                    }}
-                  >
-                    <Pencil size={13} />
-                  </button>
-                  <button
-                    className="icon-btn sm-btn"
-                    title="Delete"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onDeleteFloor(f.id)
-                    }}
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-        {showMultiBreakerCaution && (
-          <span className="fpt-caution">
-            <TriangleAlert size={14} />
-            Caution item connected to more than 1 breaker.
-          </span>
+        {isMobile ? (
+          <button
+            className="fpt-floor-select"
+            onClick={() => setFloorMenuOpen(true)}
+          >
+            <Layers size={14} />
+            <span className="fpt-floor-name">{activeFloor?.name ?? 'Floor'}</span>
+            <ChevronDown size={14} />
+          </button>
+        ) : (
+          <div className="fpt-floor-tabs">
+            {floors.map((f) => (
+              <div
+                key={f.id}
+                className={`fpt-floor-tab ${f.id === activeFloorId ? 'active' : ''}`}
+                onClick={() => setActiveFloor(f.id)}
+              >
+                <span className="fpt-floor-name">{f.name}</span>
+                {connectedFloorIds.has(f.id) && (
+                  <span
+                    className="fpt-floor-link-dot"
+                    title="Has an item linked to the selected breaker"
+                  />
+                )}
+                {isEdit && f.id === activeFloorId && (
+                  <span className="fpt-floor-actions">
+                    <button
+                      className="icon-btn sm-btn"
+                      title="Rename"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onRenameFloor(f.id, f.name)
+                      }}
+                    >
+                      <Pencil size={13} />
+                    </button>
+                    <button
+                      className="icon-btn sm-btn"
+                      title="Delete"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onDeleteFloor(f.id)
+                      }}
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        {(showMultiBreakerCaution || showCrossFloorCaution) && (
+          <div className="fpt-cautions">
+            {showMultiBreakerCaution && (
+              <span className="fpt-caution">
+                <TriangleAlert size={14} />
+                Caution item connected to more than 1 breaker.
+              </span>
+            )}
+            {showCrossFloorCaution && (
+              <span className="fpt-caution">
+                <TriangleAlert size={14} />
+                Caution breaker connected to items on multiple floors.
+              </span>
+            )}
+          </div>
         )}
         <div className="fpt-floors-end">
-          {isEdit && (
+          {!isMobile && isEdit && (
             <button
               className="btn sm"
               onClick={() => fileRef.current?.click()}
@@ -400,7 +447,7 @@ export default function FloorPlansTab() {
           <SelectionPanel
             isMobile={false}
             open={true}
-            onClose={() => setDetailsOpen(false)}
+            onClose={closeDetails}
           />
         )}
       </div>
@@ -450,6 +497,74 @@ export default function FloorPlansTab() {
             </div>
           )}
         </>
+      )}
+
+      {/* Mobile floor picker — a scrolling tab row doesn't hold up once there
+          are more than a couple of floors, so this opens a full list instead. */}
+      {isMobile && floorMenuOpen && (
+        <div className="fpt-drawer-scrim" onPointerDown={() => setFloorMenuOpen(false)}>
+          <div className="fpt-drawer" onPointerDown={(e) => e.stopPropagation()}>
+            <div className="fpt-drawer-head">
+              <span>Floors</span>
+              <button className="icon-btn" onClick={() => setFloorMenuOpen(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <div className="fpt-floor-menu">
+              {floors.map((f) => (
+                <div
+                  key={f.id}
+                  className={`fpt-floor-menu-item ${f.id === activeFloorId ? 'active' : ''}`}
+                >
+                  <button
+                    className="fpt-floor-menu-main"
+                    onClick={() => {
+                      setActiveFloor(f.id)
+                      setFloorMenuOpen(false)
+                    }}
+                  >
+                    <span>{f.name}</span>
+                    {connectedFloorIds.has(f.id) && (
+                      <span
+                        className="fpt-floor-link-dot"
+                        title="Has an item linked to the selected breaker"
+                      />
+                    )}
+                  </button>
+                  {isEdit && (
+                    <span className="fpt-floor-actions">
+                      <button
+                        className="icon-btn sm-btn"
+                        title="Rename"
+                        onClick={() => onRenameFloor(f.id, f.name)}
+                      >
+                        <Pencil size={13} />
+                      </button>
+                      <button
+                        className="icon-btn sm-btn"
+                        title="Delete"
+                        onClick={() => onDeleteFloor(f.id)}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </span>
+                  )}
+                </div>
+              ))}
+              {isEdit && (
+                <button
+                  className="btn sm fpt-floor-menu-add"
+                  onClick={() => {
+                    setFloorMenuOpen(false)
+                    fileRef.current?.click()
+                  }}
+                >
+                  <Plus size={14} /> Add floor
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

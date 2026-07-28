@@ -231,7 +231,37 @@ export const useStore = create<AppState>((set, get) => {
 
     setActiveFloor: (id) => set({ activeFloorId: id }),
     setActivePanel: (id) => set({ activePanelId: id }),
-    select: (selection) => set({ selection }),
+    // Selecting a breaker or a placement also jumps to whichever floor/panel
+    // actually shows its counterpart, so the highlighted ring lands on
+    // screen instead of on a floor plan or panel the user isn't looking at.
+    select: (selection) => {
+      set({ selection })
+      const { project, activeFloorId, activePanelId } = get()
+      if (!project || !selection) return
+
+      if (selection.kind === 'breaker') {
+        const hereHas = project.floors
+          .find((f) => f.id === activeFloorId)
+          ?.placements.some((p) => p.breakerIds.includes(selection.id))
+        if (hereHas) return
+        const target = project.floors.find((f) =>
+          f.placements.some((p) => p.breakerIds.includes(selection.id)),
+        )
+        if (target && target.id !== activeFloorId) set({ activeFloorId: target.id })
+      } else {
+        const placement = project.floors
+          .flatMap((f) => f.placements)
+          .find((p) => p.id === selection.id)
+        if (!placement || placement.breakerIds.length === 0) return
+        const activePanel = project.panels.find((pn) => pn.id === activePanelId)
+        const hereHas = activePanel?.breakers.some((b) => placement.breakerIds.includes(b.id))
+        if (hereHas) return
+        const target = project.panels.find((pn) =>
+          pn.breakers.some((b) => placement.breakerIds.includes(b.id)),
+        )
+        if (target && target.id !== activePanelId) set({ activePanelId: target.id })
+      }
+    },
     // Leaving edit mode always drops link-mode and any pending edit-breaker
     // request, since both are edit-only interactions.
     setMode: (mode) =>

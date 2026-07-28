@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LayoutGrid, Plus, Settings2, Trash2 } from 'lucide-react'
+import { ChevronDown, LayoutGrid, Plus, Settings2, Trash2 } from 'lucide-react'
 import type { Panel } from '../../types'
 import { useStore, useActivePanel } from '../../lib/store'
 import { confirmDialog } from '../../lib/dialog'
@@ -21,6 +21,7 @@ export default function PanelsTab() {
 
   const [configPanel, setConfigPanel] = useState<Panel | 'new' | null>(null)
   const [addSlot, setAddSlot] = useState<number | null>(null)
+  const [panelHeadOpen, setPanelHeadOpen] = useState(false)
   const editingBreaker = panel?.breakers.find((b) => b.id === editingBreakerId) ?? null
 
   const panels = project.panels
@@ -72,38 +73,50 @@ export default function PanelsTab() {
       {panel && (
         <div className="pt-body">
           <div className="pt-panel-head card">
-            <div className="pt-panel-meta">
+            <button
+              className="pt-panel-head-toggle"
+              onClick={() => setPanelHeadOpen((v) => !v)}
+              aria-expanded={panelHeadOpen}
+            >
               <h3>{panel.name}</h3>
-              <div className="pt-panel-specs muted">
-                {panel.model && <span>{panel.model}</span>}
-                <span className="mono">{panel.mainAmperage}A main</span>
-                <span className="mono">{panel.voltage}V</span>
-                <span>
-                  {panel.spaces} spaces · {panel.columns === 2 ? '2-col' : '1-col'} ·{' '}
-                  {panel.numbering === 'odd-even' ? 'odd/even' : 'sequential'}
-                </span>
-              </div>
-            </div>
-            {isEdit && (
-              <div className="pt-panel-tools">
-                <button className="btn sm" onClick={() => setConfigPanel(panel)}>
-                  <Settings2 size={14} /> Settings
-                </button>
-                <button
-                  className="icon-btn"
-                  title="Delete panel"
-                  onClick={async () => {
-                    const ok = await confirmDialog({
-                      title: 'Delete panel',
-                      message: `Delete panel "${panel.name}" and all its breakers?`,
-                      confirmText: 'Delete',
-                      danger: true,
-                    })
-                    if (ok) deletePanel(panel.id)
-                  }}
-                >
-                  <Trash2 size={16} />
-                </button>
+              <ChevronDown
+                size={18}
+                className={`pt-panel-chevron ${panelHeadOpen ? 'open' : ''}`}
+              />
+            </button>
+            {panelHeadOpen && (
+              <div className="pt-panel-head-body">
+                <div className="pt-panel-specs muted">
+                  {panel.model && <span>{panel.model}</span>}
+                  <span className="mono">{panel.mainAmperage}A main</span>
+                  <span className="mono">{panel.voltage}V</span>
+                  <span>
+                    {panel.spaces} spaces · {panel.columns === 2 ? '2-col' : '1-col'} ·{' '}
+                    {panel.numbering === 'odd-even' ? 'odd/even' : 'sequential'}
+                  </span>
+                </div>
+                {isEdit && (
+                  <div className="pt-panel-tools">
+                    <button className="btn sm" onClick={() => setConfigPanel(panel)}>
+                      <Settings2 size={14} /> Settings
+                    </button>
+                    <button
+                      className="icon-btn"
+                      title="Delete panel"
+                      onClick={async () => {
+                        const ok = await confirmDialog({
+                          title: 'Delete panel',
+                          message: `Delete panel "${panel.name}" and all its breakers?`,
+                          confirmText: 'Delete',
+                          danger: true,
+                        })
+                        if (ok) deletePanel(panel.id)
+                      }}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

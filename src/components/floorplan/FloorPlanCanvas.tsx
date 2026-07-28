@@ -118,14 +118,31 @@ export default function FloorPlanCanvas({
     if (!el || !floor.imgW || !floor.imgH) return
     const cw = el.clientWidth
     const ch = el.clientHeight
-    const scale = Math.min(cw / floor.imgW, ch / floor.imgH) * 0.94
+
+    // Normally fitting just the image is enough, but a marker dragged past
+    // its edge shouldn't be cropped out of the default view — expand the
+    // fitted bounds to cover every placement too.
+    let minX = 0
+    let minY = 0
+    let maxX = floor.imgW
+    let maxY = floor.imgH
+    for (const p of floor.placements) {
+      minX = Math.min(minX, p.x)
+      minY = Math.min(minY, p.y)
+      maxX = Math.max(maxX, p.x)
+      maxY = Math.max(maxY, p.y)
+    }
+    const w = maxX - minX
+    const h = maxY - minY
+
+    const scale = Math.min(cw / w, ch / h) * 0.94
     setView({
       scale,
-      tx: (cw - floor.imgW * scale) / 2,
-      ty: (ch - floor.imgH * scale) / 2,
+      tx: (cw - w * scale) / 2 - minX * scale,
+      ty: (ch - h * scale) / 2 - minY * scale,
     })
     setFitScale(scale)
-  }, [floor.imgW, floor.imgH])
+  }, [floor.imgW, floor.imgH, floor.placements])
 
   // Fit when the floor changes.
   useEffect(() => {
