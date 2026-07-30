@@ -1,6 +1,7 @@
 /* Print styles: hide the app chrome, show only the report. */
 @media print {
   @page {
+    size: letter;
     margin: 14mm;
   }
 
