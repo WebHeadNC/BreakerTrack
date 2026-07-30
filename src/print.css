@@ -14,6 +14,22 @@
     color: #0f172a !important;
   }
 
+  /* The editor shell fixes itself to the viewport height with overflow
+     hidden/auto (.ed, .rv-wrap) so the app doesn't scroll as a whole page.
+     Those same rules clip the report to one screen's worth of height when
+     printing, silently dropping everything past page 1 — reset them so the
+     report's real (possibly multi-page) content height can flow through. */
+  html,
+  body,
+  #root,
+  .ed,
+  .ed-body,
+  .ed-content,
+  .rv-wrap {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
   /* Everything is hidden by default in print... */
   body * {
     visibility: hidden;
@@ -25,11 +41,18 @@
     visibility: visible;
   }
 
+  /* !important because ReportView.css's plain (non-print) .report rule
+     sets these same properties and loads later in the bundle than this
+     file — same selector specificity, so source order would otherwise let
+     it win even while printing. */
   .report {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
+    width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
   }
 
   .no-print {

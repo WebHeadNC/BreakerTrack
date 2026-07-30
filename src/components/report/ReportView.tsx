@@ -24,6 +24,12 @@ function reportBadgeColor(type: BreakerType): string {
   return REPORT_BADGE_COLOR[type] ?? BREAKER_TYPE_META[type].color
 }
 
+function hasLinkedFixtures(breaker: Breaker, floors: Floor[]): boolean {
+  return floors.some((floor) =>
+    floor.placements.some((p) => p.breakerIds.includes(breaker.id)),
+  )
+}
+
 /**
  * Bounding box for a floor figure, expanded to include the given placements
  * (which may sit outside the image itself — see the fitView note on
@@ -90,7 +96,7 @@ export default function ReportView() {
             <Download size={16} /> Export .json
           </button>
           <button className="btn primary" onClick={() => window.print()}>
-            <Printer size={16} /> Print / Save PDF
+            <Printer size={16} /> Print
           </button>
         </div>
       </div>
@@ -204,6 +210,9 @@ function PanelSchedule({
       {/* One fixture-locator image + legend per breaker that actually has
           linked fixtures — skipped entirely for unlinked breakers so a
           mostly-empty panel doesn't produce dozens of blank sections. */}
+      {ordered.some((b) => hasLinkedFixtures(b, floors)) && (
+        <h3 className="rp-h3">Breaker Details</h3>
+      )}
       {ordered.map((b) => (
         <BreakerFixtureSection key={b.id} breaker={b} floors={floors} catalogById={catalogById} />
       ))}

@@ -66,6 +66,13 @@
   padding-bottom: 4px;
   border-bottom: 1px solid #cbd5e1;
 }
+.rp-h3 {
+  font-size: 14px;
+  color: #0f172a;
+  margin: 4px 0 10px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e2e8f0;
+}
 
 .rp-panel-meta {
   display: flex;
@@ -223,6 +230,10 @@
    breaker's own linked placements, repeated for every floor it touches. */
 .rp-breaker-fixture {
   margin-bottom: 18px;
+}
+.rp-breaker-fixture + .rp-breaker-fixture {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 14px;
 }
 .rp-breaker-fixture-title {
   display: flex;
