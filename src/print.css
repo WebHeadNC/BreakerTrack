@@ -46,13 +46,23 @@
      file — same selector specificity, so source order would otherwise let
      it win even while printing. */
   .report {
-    position: absolute;
-    top: 0;
-    left: 0;
     width: 100% !important;
     margin: 0 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
+  }
+
+  /* .report deliberately stays in normal document flow (no position:
+     absolute) for print. An earlier version pulled it out of flow to
+     escape the space still reserved by hidden ancestors (visibility:hidden
+     hides content but keeps its layout box) — but combined with the
+     avoid-break rules below, some print pipelines (observed with Windows'
+     "Microsoft Print to PDF") mis-measure remaining page space under that
+     combination and insert extra blank pages that compound with each
+     break-inside: avoid section. Hiding the one ancestor that reserved
+     real space (.ed-top) and letting .report flow normally sidesteps it. */
+  .ed-top {
+    display: none !important;
   }
 
   .no-print {
