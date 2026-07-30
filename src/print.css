@@ -50,6 +50,14 @@
     margin: 0 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
+    padding-bottom: 0 !important;
+  }
+
+  /* Trailing margin after the last section is otherwise enough leftover
+     height, on top of .report's own bottom padding above, to tip just past
+     the last page boundary and print one extra blank page. */
+  .report > *:last-child {
+    margin-bottom: 0 !important;
   }
 
   /* .report deliberately stays in normal document flow (no position:
