@@ -2,7 +2,6 @@ import crypto from 'node:crypto'
 import fs from 'node:fs'
 import http from 'node:http'
 import path from 'node:path'
-import cors from 'cors'
 import express from 'express'
 import multer from 'multer'
 import { WebSocket, WebSocketServer } from 'ws'
@@ -35,8 +34,16 @@ function saveBlobMeta(meta: Record<string, string>) {
 // --- App ---------------------------------------------------------------------
 
 const app = express()
-app.use(cors())
 app.use(express.json({ limit: '10mb' }))
+// The frontend is always same-origin (Vite proxies /api and /ws in dev; this
+// same server serves dist/ in production), so no cross-origin API access is
+// needed — leaving CORS unconfigured (default same-origin only) keeps a
+// third-party page from reading this unauthenticated API via a victim's
+// browser. Pairs with the nosniff header below against MIME-confusion XSS.
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff')
+  next()
+})
 
 function projectFilePath(id: string): string {
   return path.join(PROJECTS_DIR, `${id}.json`)
@@ -110,7 +117,18 @@ app.delete('/api/projects/:id', (req, res) => {
 
 // --- Blobs (floor plan images, custom icons) ----------------------------------
 
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } })
+// Blobs are only ever floor plan photos or icon images — restrict uploads to
+// real raster image types. SVG is deliberately excluded even though it's an
+// "image" format, since it can carry <script> content that would execute if
+// a blob URL is ever opened as a top-level document (browsers replay the
+// stored Content-Type verbatim on GET /api/blobs/:id).
+const ALLOWED_BLOB_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 25 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => cb(null, ALLOWED_BLOB_TYPES.has(file.mimetype)),
+})
 
 app.post('/api/blobs', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'no file' })
